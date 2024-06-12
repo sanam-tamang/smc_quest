@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 import '/common/extensions.dart';
 import '/common/utils/custom_toast.dart';
 import '/common/utils/floating_loading_indicator.dart';
@@ -53,12 +54,12 @@ class _SignInPageState extends State<SignInPage> {
             state.maybeMap(
               loading: (_)=> floatingLoadingIndicator(context),
               failure: (f){  
-                customToast( f.failure.getMessage);
+                customToast(context,  f.failure.getMessage, type: ToastificationType.error);
               context.pop();
             
               },
               loaded: (s){  
-                  customToast( s.message);
+                  customToast( context, s.message);
               context.pop();
               context.goNamed(AppRouteName.home);
 

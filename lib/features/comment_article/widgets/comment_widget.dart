@@ -52,12 +52,12 @@ class _CommentWidgetState extends State<CommentWidget> {
         if (state is ArticleCommentCudLoading) {
          floatingLoadingIndicator(context);
         } else if (state is ArticleCommentCudFailure) {
-           customToast( state.message);
+           customToast(context,  state.message);
           Navigator.of(context).pop();
            widget.pop ? Navigator.of(context).pop() : null;
          
         } else if (state is ArticleCommentCudSuccess) {
-                    customToast(  state.message);
+                    customToast(context,   state.message);
 
           Navigator.of(context).pop();
            widget.pop ? Navigator.of(context).pop() : null;

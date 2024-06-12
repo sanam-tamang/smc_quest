@@ -39,8 +39,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _genderController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
 
-
-late AuthBloc _authBloc;
+  late AuthBloc _authBloc;
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -53,7 +52,7 @@ late AuthBloc _authBloc;
 
   @override
   void initState() {
-   _authBloc = sl<AuthBloc>();
+    _authBloc = sl<AuthBloc>();
     super.initState();
   }
 
@@ -75,35 +74,49 @@ late AuthBloc _authBloc;
 
   @override
   Widget build(BuildContext context) {
- return  Scaffold(
-      appBar: AppBar(
-        title: const Text('Registration Form'),
-      ),
-      body:
-        
-          
-           
-       Column(
-        children: [
-          LinearProgressIndicator(
-            value: (_currentPage + 1) / 4, // Adjust based on number of pages
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('Registration Form'),
+        ),
+        body: BlocListener<AuthBloc, AuthState>(
+          bloc: _authBloc,
+          listener: (context, state) {
+            state.maybeMap(
+                loading: (_) => floatingLoadingIndicator(context),
+                failure: (f) {
+                  customToast(context, f.failure.getMessage,
+                      type: ToastificationType.error);
+                  context.pop();
+                },
+                loaded: (s) {
+                  customToast(context, s.message);
+                  context.pop();
+                  context.goNamed(AppRouteName.home);
+                },
+                orElse: () {});
+          },
+          child: Column(
+            children: [
+              LinearProgressIndicator(
+                value:
+                    (_currentPage + 1) / 4, // Adjust based on number of pages
+              ),
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildUserTypePage(),
+                    _buildUsernamePasswordPage(),
+                    _buildGenderDateOfBirthPage(),
+                    _buildAvatarPage(),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildUserTypePage(),
-                _buildUsernamePasswordPage(),
-                _buildGenderDateOfBirthPage(),
-                _buildAvatarPage(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+        ));
   }
 
   Widget _buildUserTypePage() {
@@ -244,12 +257,9 @@ late AuthBloc _authBloc;
             onPressed: _pickAvatar,
             child: const Text('Pick Avatar'),
           ),
-          
-        
           ElevatedButton(
-              onPressed: _onSignUp,
-              child: const Text('Continue'),
-            
+            onPressed: _onSignUp,
+            child: const Text('Continue'),
           ),
         ],
       ),
@@ -257,30 +267,25 @@ late AuthBloc _authBloc;
   }
 
   Future<void> _onSignUp() async {
-    
-      String avatarUrl = '';
-      if (_avatar != null) {
-        // Upload the avatar to Firebase Storage
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('avatars/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await storageRef.putFile(_avatar!);
-        avatarUrl = await storageRef.getDownloadURL();
-      }
+    String avatarUrl = '';
+    if (_avatar != null) {
+      // Upload the avatar to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('avatars/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putFile(_avatar!);
+      avatarUrl = await storageRef.getDownloadURL();
+    }
 
-     _username = generateUsername();
-      _authBloc.add(AuthEvent.signUp(
-        email: _email,
-        userType: _userType??UserType.student,
-        username: _username,
-        password: _password,
-        gender: _gender,
-        dateOfBirth: _dateOfBirth,
-        avatar: avatarUrl,
-      ));
-
-      
-    
-    
+    _username = generateUsername();
+    _authBloc.add(AuthEvent.signUp(
+      email: _email,
+      userType: _userType ?? UserType.student,
+      username: _username,
+      password: _password,
+      gender: _gender,
+      dateOfBirth: _dateOfBirth,
+      avatar: avatarUrl,
+    ));
   }
 }
